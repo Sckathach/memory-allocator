@@ -35,9 +35,9 @@ int nb_consecutive_blocks(int first) {
 }
 
 /* Return the number of consecutive blocks starting from first and making an entire loop */
-int nb_consecutive_blocks_total(int first) {
-  int index = first;
-  int last_index = first;
+int nb_consecutive_blocks_total() {
+  int index = m.first_block;
+  int last_index = m.first_block;
   int consecutive = 1;
   int max_consecutive = 1;
   while (index != NULL_BLOCK) {
@@ -59,14 +59,49 @@ int nb_consecutive_blocks_total(int first) {
 }
 
 /* Reorder memory blocks */
-void memory_reorder() {
-  /* TODO (exercise 2) */
+int memory_reorder_aux() {
+  int i = m.blocks[m.first_block];
+  int j = m.first_block;
+  int k = m.first_block;
+  int c = 0;
+  while (m.blocks[j] != NULL_BLOCK) {
+    if (((i > j) && (m.blocks[i] > m.blocks[j])) || ((i < j) && (m.blocks[i] < m.blocks[j]))) {
+      k = j;
+      j = i;
+      i = m.blocks[i];
+    } else {
+      c += 1;
+      m.blocks[j] = m.blocks[i];
+      m.blocks[i] = j;
+      if (j == m.first_block) {
+        m.first_block = i;
+      } else {
+        m.blocks[k] = i;
+      }
+      k = i;
+      i = m.blocks[j];
+    }
+  }
+  return c;
+}
+void memory_reorder(){
+  int c = 0;
+  do {
+    c = memory_reorder_aux();
+  } while (c > 0);
 }
 
 /* Allocate size bytes
  * return -1 in case of an error
  */
 int memory_allocate(size_t size) {
+  // if (nb_consecutive_blocks_total() < size) {
+  //    memory_reorder();
+  //    if (nb_consecutive_blocks_total() < size) {
+  //      m.error_no = E_SHOULD_PACK;
+  //      return -1;
+  //    }
+  // }
   int index = m.first_block;
   int last_index = index;
   int consecutive = 1;
@@ -220,6 +255,16 @@ void init_m_with_some_allocated_blocks() {
   m = m_init;
 }
 
+void init_perso(){
+  struct memory_alloc_t m_init = {
+    {A_B, 4, 3, 1, NULL_BLOCK},
+    4,
+    2,
+    INT32_MIN
+  };
+  m = m_init;
+}
+
 /* Test nb_consecutive_block() at the beginning of the available blocks list */
 void test_exo1_nb_consecutive_blocks_at_beginning_linked_list(){
   init_m_with_some_allocated_blocks();
@@ -232,6 +277,13 @@ void test_exo1_nb_consecutive_blocks_at_middle_linked_list(){
   init_m_with_some_allocated_blocks();
   memory_print();
   assert_int_equal(nb_consecutive_blocks(3), 3);
+}
+
+void test_perso(){
+  init_m_with_some_allocated_blocks();
+  memory_print();
+  memory_reorder();
+  memory_print();
 }
 
 /* Test nb_consecutive_block() at the end of the available blocks list */
